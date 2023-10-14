@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import argparse
+from config import settings
 
 def get_vcard_string(surname, name, middle_name, title, email, tel,
                      street, zip, city, state, country) -> str:
@@ -20,25 +21,29 @@ def process_excel(path) -> str:
     df = pd.read_excel(path)
     file_content = ''
     for _, row in df.iterrows():
-        mother_name = row['Kontakt']
-        mother_tel = row['Kontakt Telefon']
-        father_name = row['Kontakt.1']
-        father_tel = row['Kontakt Telefon.1']
+        mother_name = row[settings.column_mother_name]
+        mother_tel = row[settings.column_mother_tel]
+        father_name = row[settings.column_father_name]
+        father_tel = row[settings.column_father_tel]
 
         if not (mother_name is np.nan or mother_tel is np.nan):
-            file_content += get_vcard_string(title='(Mutter)', 
-                                     surname=row['Vorname'], name=row['Nachname'], 
-                                     middle_name=row['Zweiter Name'], 
-                                     email=row['Kontakt E-Mail'], tel=mother_tel,
-                                     street=row['Strasse'], zip=row['PLZ'], country=row['Land'], 
-                                     state=row['Bundesland'], city=row['Stadt'])
+            file_content += get_vcard_string(title=settings.mother_prefix, 
+                                     surname=row[settings.column_child_surname],
+                                     name=row[settings.column_child_name], 
+                                     middle_name=row[settings.column_child_middlename], 
+                                     email=row[settings.column_mother_mail], tel=mother_tel,
+                                     street=row[settings.column_street], zip=row[settings.column_zip],
+                                     country=row[settings.column_country], 
+                                     state=row[settings.column_state], city=row[settings.column_city])
         if not (father_name is np.nan or father_tel is np.nan):
-            file_content += get_vcard_string(title='(Vater)', 
-                                     surname=row['Vorname'], name=row['Nachname'],
-                                     middle_name=row['Zweiter Name'], 
-                                     email=row['Kontakt E-Mail.1'], tel=father_tel, 
-                                     street=row['Strasse'], zip=row['PLZ'], country=row['Land'], 
-                                     state=row['Bundesland'], city=row['Stadt'])
+            file_content += get_vcard_string(title=settings.father_prefix, 
+                                     surname=row[settings.column_child_surname],
+                                     name=row[settings.column_child_name], 
+                                     middle_name=row[settings.column_child_middlename], 
+                                     email=row[settings.column_father_mail], tel=father_tel,
+                                     street=row[settings.column_street], zip=row[settings.column_zip],
+                                     country=row[settings.column_country], 
+                                     state=row[settings.column_state], city=row[settings.column_city])
     return file_content
 
 
