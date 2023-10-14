@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import argparse
 
 def get_vcard_string(surname, name, middle_name, title, email, tel,
                      street, zip, city, state, country) -> str:
@@ -42,8 +43,16 @@ def process_excel(path) -> str:
 
 
 if __name__ == '__main__':
-    output_file = './contacts.vcf'
-    input_file = 'input_files/scoreg.xlsx'
-    content = process_excel(input_file)
-    with open(output_file, 'w+') as fp:
+    parser = argparse.ArgumentParser(
+        prog='Scoreg2Contacts',
+        description='A program used to create parental contact information given an excel file from SCOREG.'
+    )
+    parser.add_argument('-i', '--input-file', required=True,
+                        type=str, help='Path to the SCOREG-Excel file that is parsed.')
+    parser.add_argument('-o', '--output-file', required=True,
+                        type=str, help='Path and name of the output file that shall be created.')
+    args = parser.parse_args()
+    
+    content = process_excel(args.input_file)
+    with open(args.output_file, 'w+') as fp:
         fp.write(content)
