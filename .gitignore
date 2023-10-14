@@ -1,3 +1,4 @@
 input_files/scoreg*
 .ipynb_*
 .venv/
+__pycache__/
