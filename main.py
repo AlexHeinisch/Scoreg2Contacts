@@ -5,20 +5,15 @@ def get_vcard_string(surname, name, middle_name, title, email, tel,
                      street, zip, city, state, country) -> str:
     if pd.isna(middle_name):
         middle_name = ''
-    result = \
-f"""BEGIN:VCARD
+    email_str = '' if pd.isna(email) else f'EMAIL;PREF;INTERNET:{email}\n'
+
+    return f"""BEGIN:VCARD
 VERSION:3.0
 N:{name};{surname};{middle_name};{title};
 TEL;TYPE=home,voice;VALUE=uri:tel:{tel}
-ADR;TYPE=home;LABEL="{street}\n{zip} {city}\n{state} {country}":;;{street};{city};{state};{zip};{country}"""
-
-    if not pd.isna(email):
-        result += f'\nEMAIL;PREF;INTERNET:{email}'
-
-    result += """
-END:VCARD
+ADR;TYPE=home;LABEL="{street}\n{zip} {city}\n{state} {country}":;;{street};{city};{state};{zip};{country}
+{email_str}END:VCARD
 """
-    return result
 
 def process_excel(path) -> str:
     df = pd.read_excel(path)
