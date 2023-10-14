@@ -12,7 +12,7 @@ def get_vcard_string(surname, name, middle_name, title, email, tel,
     return f"""BEGIN:VCARD
 VERSION:3.0
 N:{name};{surname};{middle_name};{title};
-TEL;TYPE=home,voice;VALUE=uri:{tel}
+TEL;TYPE=home,voice;VALUE=uri:tel:{tel}
 ADR;TYPE=home;LABEL="{street}\n{zip} {city}\n{state} {country}":;;{street};{city};{state};{zip};{country}
 {email_str}END:VCARD
 """
