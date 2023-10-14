@@ -15,38 +15,40 @@ ADR;TYPE=home;LABEL="{street}\n{zip} {city}\n{state} {country}":;;{street};{city
     if not pd.isna(email):
         result += f'\nEMAIL;PREF;INTERNET:{email}'
 
-
     result += """
 END:VCARD
 """
     return result
 
+def process_excel(path) -> str:
+    df = pd.read_excel(path)
+    file_content = ''
+    for _, row in df.iterrows():
+        mother_name = row['Kontakt']
+        mother_tel = row['Kontakt Telefon']
+        father_name = row['Kontakt.1']
+        father_tel = row['Kontakt Telefon.1']
+
+        if not (mother_name is np.nan or mother_tel is np.nan):
+            file_content += get_vcard_string(title='(Mutter)', 
+                                     surname=row['Vorname'], name=row['Nachname'], 
+                                     middle_name=row['Zweiter Name'], 
+                                     email=row['Kontakt E-Mail'], tel=mother_tel,
+                                     street=row['Strasse'], zip=row['PLZ'], country=row['Land'], 
+                                     state=row['Bundesland'], city=row['Stadt'])
+        if not (father_name is np.nan or father_tel is np.nan):
+            file_content += get_vcard_string(title='(Vater)', 
+                                     surname=row['Vorname'], name=row['Nachname'],
+                                     middle_name=row['Zweiter Name'], 
+                                     email=row['Kontakt E-Mail.1'], tel=father_tel, 
+                                     street=row['Strasse'], zip=row['PLZ'], country=row['Land'], 
+                                     state=row['Bundesland'], city=row['Stadt'])
+    return file_content
+
+
 if __name__ == '__main__':
     output_file = './contacts.vcf'
     input_file = 'input_files/scoreg.xlsx'
-    df = pd.read_excel(input_file)
-    file = ''
-    for idx, row in df.iterrows():
-        surname = row['Vorname']
-        name = row['Nachname']
-        middle_name = row['Zweiter Name']
-        street = row['Strasse']
-        city = row['Stadt']
-        zip = row['PLZ']
-        country = row['Land']
-        state = row['Bundesland']
-        mother_name = row['Kontakt']
-        mother_tel = row['Kontakt Telefon']
-        mother_email = row['Kontakt E-Mail']
-        father_name = row['Kontakt.1']
-        father_tel = row['Kontakt Telefon.1']
-        father_email = row['Kontakt E-Mail.1']
-
-        if not (mother_name is np.nan or mother_tel is np.nan):
-            file += get_vcard_string(title='(Mutter)', surname=surname, name=name, middle_name=middle_name, email=mother_email, 
-                                   tel=mother_tel, street=street, zip=zip, country=country, state=state, city=city)
-        if not (father_name is np.nan or father_tel is np.nan):
-            file += get_vcard_string(title='(Vater)', surname=surname, name=name, middle_name=middle_name, email=father_email, 
-                                   tel=father_tel, street=street, zip=zip, country=country, state=state, city=city)
+    content = process_excel(input_file)
     with open(output_file, 'w+') as fp:
-        fp.write(file)
+        fp.write(content)
