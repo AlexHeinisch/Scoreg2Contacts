@@ -3,3 +3,5 @@ input_files/scoreg*
 .venv/
 __pycache__/
 .DS_Store
+*.vcf
+input_files/*
