@@ -1,53 +1,52 @@
 import pandas as pd
-import numpy as np
-import argparse
-from config import settings
 
-def get_vcard_string(title, surname, name, email, tel) -> str:
-    middle_name = ''
-    email_str = '' if pd.isna(email) else f'EMAIL;PREF;INTERNET:{email}\n'
+def create_vcards_from_xlsx(input_file: str, output_file: str):
+    # Read Excel file
+    df = pd.read_excel(input_file)
 
-    return f"""BEGIN:VCARD
-VERSION:3.0
-N:{name};{surname};{middle_name};{title};
-TEL;TYPE=home,voice;VALUE=uri:tel:{tel}
-ADR;TYPE=home;LABEL=""
-{email_str}END:VCARD
-"""
+    vcards = []
 
-def process_excel(path) -> str:
-    df = pd.read_excel(path)
-    file_content = ''
     for _, row in df.iterrows():
-        mother_name = row[settings.column_mother_name]
-        mother_tel = row[settings.column_mother_tel]
-        father_name = row[settings.column_father_name]
-        father_tel = row[settings.column_father_tel]
+        child_firstname = str(row.get("Vorname", "")).strip()
+        child_lastname = str(row.get("Nachname", "")).strip()
 
-        if not (mother_name is np.nan or mother_tel is np.nan):
-            file_content += get_vcard_string(title=settings.mother_prefix, 
-                                     surname=row[settings.column_child_surname],
-                                     name=row[settings.column_child_name], 
-                                     email=row[settings.column_mother_mail], tel=mother_tel)
-        if not (father_name is np.nan or father_tel is np.nan):
-            file_content += get_vcard_string(title=settings.father_prefix, 
-                                     surname=row[settings.column_child_surname],
-                                     name=row[settings.column_child_name], 
-                                     email=row[settings.column_father_mail], tel=father_tel)
-    return file_content
+        for i in [1, 2]:
+            contact_type = str(row.get(f"Kontakt {i} Art", "")).strip()
+            contact_name = str(row.get(f"Kontakt {i}", "")).strip()
+            contact_phone = str(row.get(f"Kontakt {i} Telefon", "")).strip()
+            contact_email = str(row.get(f"Kontakt {i} Email", "")).strip()
+
+            if contact_type.lower() == "nan" or contact_name.lower() == "nan" or contact_phone.lower() == "nan":
+                continue
+
+            # Clean up type (remove (*) if present)
+            primary = "(*)" in contact_type
+            contact_type = contact_type.replace("(*)", "").strip()
+
+            flag = " *" if primary else ""
+
+            # Create full name (e.g., "Anna Müller (Mutter von Lisa Müller)")
+            full_name = f"{contact_name}{flag} ({contact_type} von {child_firstname} {child_lastname})"
+
+            vcard = [
+                "BEGIN:VCARD",
+                "VERSION:3.0",
+                f"FN:{full_name}",
+                f"TEL;TYPE=CELL:{contact_phone}",
+            ]
+
+            if contact_email and contact_email.lower() != "nan":
+                vcard.append(f"EMAIL;TYPE=INTERNET:{contact_email}")
+
+            vcard.append("END:VCARD")
+            vcards.append("\n".join(vcard))
+
+    # Write to .vcf file
+    with open(output_file, "w", encoding="utf-8") as f:
+        f.write("\n".join(vcards))
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        prog='Scoreg2Contacts',
-        description='A program used to create parental contact information given an excel file from SCOREG.'
-    )
-    parser.add_argument('-i', '--input-file', required=True,
-                        type=str, help='Path to the SCOREG-Excel file that is parsed.')
-    parser.add_argument('-o', '--output-file', required=True,
-                        type=str, help='Path and name of the output file that shall be created.')
-    args = parser.parse_args()
-    
-    content = process_excel(args.input_file)
-    with open(args.output_file, 'w+') as fp:
-        fp.write(content)
+if __name__ == "__main__":
+    # Example usage
+    create_vcards_from_xlsx("input_files/test.xlsx", "contacts.vcf")
+
